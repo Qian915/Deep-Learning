@@ -13,7 +13,8 @@ class SoftMax:
         self.weights = None
 
     def forward(self, input_tensor):
-        x_exp = np.exp(input_tensor)
+        # shift: xk = xk - max(x)
+        x_exp = np.exp(input_tensor - np.max(input_tensor))
         partition = np.sum(x_exp, axis=1, keepdims=True)
         out = x_exp / partition
         self.y_pred = out
