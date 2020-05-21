@@ -53,15 +53,9 @@ class NeuralNetwork:
         self.layers.append(layer)
 
     def train(self, iterations):
-        # initialization for weights
-        w = np.zeros((self.input_dim,))
-
         for epoch in range(iterations):
             y_pred = self.forward()
-            w_grad = self.backward()
-
-            # weights update
-            w = self.optimizer.calculate_update(w, w_grad)
+            input = self.backward()
 
             # store loss for each iteration
             loss.append(self.loss_layer.forward(y_pred, self.label))
