@@ -31,7 +31,9 @@ class NeuralNetwork:
             # output of the former layer = input of the next layer
             input_tensor = layer.forward(input_tensor)
 
-        return input_tensor
+        out = self.loss_layer.forward(input_tensor, self.label)
+
+        return out
 
     def backward(self):
         # backpropagation from Loss layer
