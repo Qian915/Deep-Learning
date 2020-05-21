@@ -10,7 +10,7 @@ class FullyConnected:
         self.output_size = output_size
 
         # protected member: _optimizer
-        self._optimizer = Optimizers.Sgd(np.random.uniform(0, 1))
+        self._optimizer = None
 
         self.grad_weights = None
 
@@ -36,8 +36,8 @@ class FullyConnected:
     def forward(self, input_tensor):
         input_tensor = np.array(input_tensor)    # input_tensor is of type tuple
         # input with bias
-        bias = np.ones((np.shape(input_tensor)[0], 1))
-        self.input = np.append(input_tensor, bias, axis=1)
+        bias = np.ones((input_tensor.shape[0], 1))
+        self.input = np.hstack((input_tensor, bias))
 
         out = np.dot(self.input, self.weights)     # (50,4) (5,3) ??????????????
         return out
@@ -52,6 +52,7 @@ class FullyConnected:
         self.grad_weights = np.dot(self.input.T, error_tensor)
 
         # update weights
-        self.weights = self.optimizer.calculate_update(self.weights, self.gradient_weights)
+        if self.optimizer is not None: 
+            self.weights = self.optimizer.calculate_update(self.weights, self.gradient_weights)
 
         return error
