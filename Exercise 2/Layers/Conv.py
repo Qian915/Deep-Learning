@@ -7,6 +7,11 @@ class Conv:
         self.stride_shape = stride_shape
         self.convolution_shape = convolution_shape
         self.num_kernels = num_kernels
+        # padding: height & width
+        self.phUp = np.ceil((self.convolution_shape.shape[1] - 1) / 2)
+        self.phBottom = np.floor((self.convolution_shape.shape[1] - 1) / 2)
+        self.pwLeft = np.ceil((self.convolution_shape.shape[2] - 1) / 2)
+        self.pwRight = np.floor((self.convolution_shape.shape[2] - 1) / 2)
 
         self.input = None
         self.error = None
