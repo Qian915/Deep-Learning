@@ -6,20 +6,17 @@ from Optimization import *
 
 class NeuralNetwork:
 
-    # create public members
-    loss = []
-    layers = []
-    data_layer = None
-    loss_layer = None
-
-    # store training data
-    input = None
-    label = None
-    input_dim = 0
-
-    # constructor
     def __init__(self, optimizer):
         self.optimizer = optimizer
+        # create public members
+        self.loss = []
+        self.layers = []
+        self.data_layer = None
+        self.loss_layer = None
+
+        # store training data
+        self.input = None
+        self.label = None
 
     def forward(self):
         # training data
@@ -56,15 +53,14 @@ class NeuralNetwork:
 
     def train(self, iterations):
         for epoch in range(iterations):
-            y_pred = self.forward()
-            input = self.backward()
-
             # store loss for each iteration
-            loss.append(self.loss_layer.forward(y_pred, self.label))
+            self.loss.append(self.forward())
+            self.backward()
 
     def test(self, input_tensor):
-        self.input = input_tensor
-        y_pred = self.forward()
+        for layer in self.layers:
+            input_tensor = layer.forward(input_tensor)
+        y_pred = input_tensor
         return y_pred
 
 
