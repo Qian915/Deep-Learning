@@ -1,9 +1,12 @@
 import numpy as np
+from Layers.Base import BaseLayer
 
-class ReLU:
+
+class ReLU(BaseLayer):
 
     # constructor
     def __init__(self):
+        super().__init__()
         self.input = None
 
     # f(x) = max(0, x)

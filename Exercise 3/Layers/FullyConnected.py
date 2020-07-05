@@ -1,11 +1,13 @@
 import numpy as np
 from Optimization import Optimizers
+from Layers.Base import BaseLayer
 
 
-class FullyConnected:
+class FullyConnected(BaseLayer):
 
     # constructor
     def __init__(self, input_size, output_size):
+        super().__init__()
         self.input_size = input_size
         self.output_size = output_size
 
@@ -34,7 +36,6 @@ class FullyConnected:
         return self.grad_weights
 
     def forward(self, input_tensor):
-        input_tensor = np.array(input_tensor)    # input_tensor is of type tuple
         # input with bias
         if (np.shape(input_tensor)[1]) == (np.shape(self.weights)[0]):
             self.input = input_tensor
@@ -42,11 +43,10 @@ class FullyConnected:
             bias = np.ones((input_tensor.shape[0], 1))
             self.input = np.hstack((input_tensor, bias))
 
-        out = np.dot(self.input, self.weights)     # (50,4) (5,3) ??????????????
+        out = np.dot(self.input, self.weights)
         return out
 
     def backward(self, error_tensor):
-        error_tensor = np.array(error_tensor)     # error_tensor is of type tuple
         # x_grad w/o bias
         weights_no_bias = self.weights[0:-1, :]
         error = np.dot(error_tensor, weights_no_bias.T)

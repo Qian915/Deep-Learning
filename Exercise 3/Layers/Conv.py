@@ -5,11 +5,13 @@ from scipy.signal import convolve
 from scipy.signal import correlate
 
 from Layers import Initializers
+from Layers.Base import BaseLayer
 
 
-class Conv:
+class Conv(BaseLayer):
 
     def __init__(self, stride_shape, convolution_shape, num_kernels):
+        super().__init__()
         # !!! single value or tuple !!!
         self.stride_shape = stride_shape
 

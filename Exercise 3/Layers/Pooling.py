@@ -1,10 +1,12 @@
 
 import numpy as np
-# import skimage.measure
+from Layers.Base import BaseLayer
 
-class Pooling:
+
+class Pooling(BaseLayer):
 
     def __init__(self, stride_shape, pooling_shape):
+        super().__init__()
         self.stride_shape = stride_shape
         self.pooling_shape = pooling_shape
 

@@ -1,9 +1,11 @@
 
 import numpy as np
+from Layers.Base import BaseLayer
 
 
-class Constant:
+class Constant(BaseLayer):
     def __init__(self, constant=0.1):
+        super().__init__()
         self.constant = constant
 
     def initialize(self, weights_shape, fan_in=1, fan_out=1):
@@ -11,8 +13,9 @@ class Constant:
         return weights
 
 
-class UniformRandom:
+class UniformRandom(BaseLayer):
     def __init__(self, constant=0.1):
+        super().__init__()
         self.constant = constant
 
     def initialize(self, weights_shape, fan_in=1, fan_out=1):
@@ -20,8 +23,9 @@ class UniformRandom:
         return weights
 
 
-class Xavier:
+class Xavier(BaseLayer):
     def __init__(self, constant=0.1):
+        super().__init__()
         self.constant = constant
 
     def initialize(self, weights_shape, fan_in, fan_out):
@@ -30,8 +34,9 @@ class Xavier:
         return weights
 
 
-class He:
+class He(BaseLayer):
     def __init__(self, constant=0.1):
+        super().__init__()
         self.constant = constant
 
     def initialize(self, weights_shape, fan_in, fan_out):
