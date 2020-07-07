@@ -12,9 +12,11 @@ class Dropout(BaseLayer):
     def forward(self, input_tensor):
         if not self.testing_phase:
             self.activations = np.random.binomial(n=1, p=self.probability, size=input_tensor.shape) / self.probability
-            input_tensor *= self.activations
+            out = input_tensor * self.activations
         # skip dropout layer in testing time
-        return input_tensor
+        else:
+            return input_tensor
+        return out
 
     def backward(self, error_tensor):
         if not self.testing_phase:
