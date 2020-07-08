@@ -30,21 +30,20 @@ class BatchNormalization(BaseLayer):
             input_tensor = self.reformat(input_tensor)
         self.input = input_tensor
 
-        # initialize testing mean, var
-        testing_mu = np.mean(input_tensor, axis=0)
-        testing_var = np.var(input_tensor, axis=0)
-
         if not self.testing_phase:
             self.mu = np.mean(input_tensor, axis=0)
             self.var = np.var(input_tensor, axis=0)
+            # initialize testing mean, var
+            self.testing_mu = self.mu
+            self.testing_var = self.var
+
             self.x_norm = (input_tensor - self.mu) / np.sqrt(self.var + np.finfo(float).eps)
             out = self.weights * self.x_norm + self.bias
             # store testing mean & var while training
-            # ????? online estimation ????? forward(self, input_tensor, cache)?
-            testing_mu = .8 * testing_mu + .2 * self.mu
-            testing_var = .8 * testing_var + .2 * self.var
+            self.testing_mu = .8 * self.testing_mu + .2 * self.mu
+            self.testing_var = .8 * self.testing_var + .2 * self.var
         else:
-            self.x_norm = (input_tensor - testing_mu) / np.sqrt(testing_var + np.finfo(float).eps)
+            self.x_norm = (input_tensor - self.testing_mu) / np.sqrt(self.testing_var + np.finfo(float).eps)
             out = self.weights * self.x_norm + self.bias
 
         # convolutional: 2D -> 4D
@@ -59,12 +58,8 @@ class BatchNormalization(BaseLayer):
             error_tensor = self.reformat(error_tensor)
 
         # grad w.r.t. weights & bias
-        self.gradient_weights = np.sum(error_tensor * self.x_norm, axis=0)
-        self.gradient_bias = np.sum(error_tensor, axis=0)
-        # 2D -> 4D
-        if len(original_tensor.shape) == 4:
-            self.gradient_weights = self.reformat(self.gradient_weights)
-            self.gradient_bias = self.reformat(self.gradient_bias)
+        self.gradient_weights = np.sum(error_tensor * self.x_norm, axis=0, keepdims=True)
+        self.gradient_bias = np.sum(error_tensor, axis=0, keepdims=True)
         if self.optimizer is not None:
             self.weights = self.optimizer.calculate_update(self.weights, self.gradient_weights)
             self.bias = self.optimizer.calculate_update(self.bias, self.gradient_bias)
@@ -78,7 +73,7 @@ class BatchNormalization(BaseLayer):
         return error
 
     def reformat(self, tensor):
-        # 4D -> 2D
+        # 4D -> 2D: (B, H, M, N) -> (B*M*N, H)
         if len(tensor.shape) == 4:
             self.b = tensor.shape[0]
             self.h = tensor.shape[1]
@@ -87,7 +82,7 @@ class BatchNormalization(BaseLayer):
             out = tensor.reshape(self.b, self.h, self.m*self.n)
             out = out.transpose(0, 2, 1)
             out = out.reshape(self.b*self.m*self.n, self.h)
-        # 2D -> 4D
+        # 2D -> 4D: (B*M*N, H) -> (B, H, M, N)
         else:
             out = tensor.swapaxes(0, 1)
             out = out.reshape(self.h, self.b, self.m*self.n)
