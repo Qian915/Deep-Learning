@@ -37,11 +37,16 @@ class FullyConnected(BaseLayer):
 
     def forward(self, input_tensor):
         # input with bias
-        if (np.shape(input_tensor)[1]) == (np.shape(self.weights)[0]):
-            self.input = input_tensor
-        if (np.shape(input_tensor)[1] +1) == (np.shape(self.weights)[0]):
+        # if (np.shape(input_tensor)[1]) == (np.shape(self.weights)[0]):
+           # self.input = input_tensor
+        # if (np.shape(input_tensor)[1] +1) == (np.shape(self.weights)[0]):
+
+        # input_tensor as a vector
+        if len(input_tensor.shape) == 1:
+            bias = np.ones(1)
+        else:
             bias = np.ones((input_tensor.shape[0], 1))
-            self.input = np.hstack((input_tensor, bias))
+        self.input = np.hstack((input_tensor, bias))
 
         out = np.dot(self.input, self.weights)
         return out
