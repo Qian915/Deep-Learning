@@ -46,7 +46,7 @@ class NeuralNetwork:
         for layer in self.layers:
             input_tensor = layer.forward(input_tensor)
             # get the regularization loss of all layers
-            if layer.optimizer.regularizer is not None:
+            if hasattr(layer, 'optimizer') and layer.optimizer is not None and layer.optimizer.regularizer is not None:
                 reg_loss += layer.optimizer.regularizer.norm(layer.weights)
 
         out = self.loss_layer.forward(input_tensor, self.label) + reg_loss
