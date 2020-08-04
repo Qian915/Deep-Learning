@@ -62,8 +62,11 @@ class Trainer:
         # TODO
 
         if self._cuda:
-            x = t.tensor(x, dtype=t.float).cuda()
-            y = t.tensor(y, dtype=t.float).cuda().squeeze()
+            x = x.clone().detach().cuda()
+            y = y.clone().detach().cuda().squeeze()
+
+            #x = t.tensor(x, dtype=t.float).cuda()
+            #y = t.tensor(y, dtype=t.float).cuda().squeeze()
 
         self._optim.zero_grad()
         y_pred = self._model(x)
@@ -72,8 +75,7 @@ class Trainer:
         y_predTmp = binarize(y_predTmp.cpu().detach().numpy(), threshold=0.5)  # numpy array w/o grad
         y_pred.data = t.tensor(y_predTmp, dtype=t.float).cuda()
 
-        loss = self._crit(y_pred, y)
-        print(loss)
+        loss = self._crit(y_pred, y.float())
         loss.backward()
         self._optim.step()
         return loss
@@ -85,15 +87,16 @@ class Trainer:
         # TODO
 
         if self._cuda:
-            x = t.tensor(x, dtype=t.float).cuda()
-            y = t.tensor(y, dtype=t.float).cuda().squeeze()
+            x = x.clone().detach().cuda()
+            y = y.clone().detach().cuda().squeeze()
+            #x = t.tensor(x, dtype=t.float).cuda()
+            #y = t.tensor(y, dtype=t.float).cuda().squeeze()
 
         y_pred = self._model(x)
-        y_predTmp = y_pred.clone()
-        y_predTmp = binarize(y_predTmp.cpu().detach().numpy(), threshold=0.5)  # numpy array w/o grad
-        y_pred.data = t.tensor(y_predTmp, dtype=t.float).cuda()
+        y_pred = binarize(y_pred.cpu().detach().numpy(), threshold=0.5)  # numpy array
+        y_pred = t.tensor(y_pred, dtype=t.float).cuda()
 
-        loss = self._crit(y_pred, y)
+        loss = self._crit(y_pred, y.float())
 
         return loss, y_pred
 
@@ -112,10 +115,11 @@ class Trainer:
 
         for i, (batch_x, batch_y) in enumerate(self._train_dl):
             step = i+1
-
             if self._cuda:
-                batch_x = t.tensor(batch_x, dtype=t.float).cuda()
-                batch_y = t.tensor(batch_y, dtype=t.float).cuda()
+                batch_x = batch_x.clone().detach().cuda()
+                batch_y = batch_y.clone().detach().cuda()
+                #batch_x = t.tensor(batch_x, dtype=t.float).cuda()
+                #batch_y = t.tensor(batch_y, dtype=t.float).cuda()
 
             batch_loss = self.train_step(batch_x, batch_y)
             loss += batch_loss.item()
@@ -137,32 +141,28 @@ class Trainer:
         self._model.eval()
 
         loss = 0
+        f1 = 0
         step = 0
-        y_true = []
-        y_pred = []
 
         with t.no_grad():
             for i, (batch_x, batch_y) in enumerate(self._val_test_dl):
                 step = i+1
-
                 if self._cuda:
-                    batch_x = t.tensor(batch_x, dtype=t.float).cuda()
-                    batch_y = t.tensor(batch_y, dtype=t.float).cuda()
+                    batch_x = batch_x.clone().detach().cuda()
+                    batch_y = batch_y.clone().detach().cuda()
+                    #batch_x = t.tensor(batch_x, dtype=t.float).cuda()
+                    #batch_y = t.tensor(batch_y, dtype=t.float).cuda()
 
                 batch_loss, batch_pred = self.val_test_step(batch_x, batch_y)
 
-                y_true.append(batch_y)
-                y_pred.append(batch_pred)
+                f1_batch = f1_score(batch_y.squeeze().cpu().detach().numpy(), batch_pred.cpu().detach().numpy(), average='micro')
 
+                f1 += f1_batch
                 loss += batch_loss.item()
 
         # f1_score
-        y_true = t.cat(y_true)
-        y_pred = t.cat(y_pred)
-        y_true = t.tensor(y_true, dtype=t.float).squeeze()
-        y_pred = t.tensor(y_pred, dtype=t.float)
-
-        print('F1_score:',  f1_score(y_true, y_pred, average='micro'))
+        avg_f1_score = f1 / step
+        print('F1_score:',  avg_f1_score)
 
         # average loss
         avg_loss = loss / step
@@ -190,15 +190,12 @@ class Trainer:
 
             epoch += 1
             if epoch < epochs:
+                print(f'Epoch: {epoch}')
                 train_loss.append(self.train_epoch())
                 val_loss.append(self.val_test())
-                print('train_loss:', train_loss)
-                print('val_loss:', val_loss)
 
                 if best_loss is None:
                     best_loss = val_loss[epoch]
-                    print('best_loss:', best_loss)
-                    self.save_checkpoint(epoch)
                     continue
                 elif val_loss[epoch] < best_loss:
                     best_loss = val_loss[epoch]
@@ -213,6 +210,8 @@ class Trainer:
                         break
                     else:
                         continue
+        print(train_loss)
+        print(val_loss)
         return train_loss, val_loss
 
 
