@@ -18,8 +18,8 @@ train_data, val_data = train_test_split(data, test_size=0.2)
 # TODO
 train_set = ChallengeDataset(train_data, 'train')
 val_set = ChallengeDataset(val_data, 'val')
-train_dl = t.utils.data.DataLoader(train_set, batch_size=32, shuffle=True, num_workers=2)  # set batch_size = 8
-val_dl = t.utils.data.DataLoader(val_set, batch_size=32, num_workers=2)
+train_dl = t.utils.data.DataLoader(train_set, batch_size=8, shuffle=True, num_workers=2)  # set batch_size = 8
+val_dl = t.utils.data.DataLoader(val_set, batch_size=8, num_workers=2)
 
 
 # create an instance of our ResNet model
@@ -31,7 +31,7 @@ model = model.ResNet()
 # create an object of type Trainer and set its early stopping criterion
 # TODO
 crit = t.nn.BCELoss()
-optim = t.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0005)
+optim = t.optim.Adam(model.parameters(), lr=0.0001, weight_decay=0.0005)
 trainer = Trainer(model, crit, optim, train_dl, val_dl, True, 50)  # set early stopping persistence
 
 # go, go, go... call fit on trainer
