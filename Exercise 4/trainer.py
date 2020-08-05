@@ -155,7 +155,7 @@ class Trainer:
 
                 batch_loss, batch_pred = self.val_test_step(batch_x, batch_y)
 
-                f1_batch = f1_score(batch_y.squeeze().cpu().detach().numpy(), batch_pred.cpu().detach().numpy(), average='micro')
+                f1_batch = f1_score(batch_y.squeeze().cpu().detach().numpy(), batch_pred.cpu().detach().numpy(), average='micro', zero_division=0)
 
                 f1 += f1_batch
                 loss += batch_loss.item()
@@ -189,8 +189,8 @@ class Trainer:
             # TODO
 
             epoch += 1
+            print("########################################## Epoch:", epoch, " #########################################" )
             if epoch < epochs:
-                print(f'Epoch: {epoch}')
                 train_loss.append(self.train_epoch())
                 val_loss.append(self.val_test())
 
@@ -204,9 +204,8 @@ class Trainer:
                     continue
                 else:
                     counter += 1
-                    print(f'Epoch:{epoch} EarlyStopping counter: {counter} out of {self._early_stopping_patience}')
+                    print(f'EarlyStopping counter: {counter} out of {self._early_stopping_patience}')
                     if counter >= self._early_stopping_patience:
-                        print('Early Stopping!')
                         break
                     else:
                         continue

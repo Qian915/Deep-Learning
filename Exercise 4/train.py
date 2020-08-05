@@ -32,11 +32,11 @@ model = model.ResNet()
 # TODO
 crit = t.nn.BCELoss()
 optim = t.optim.Adam(model.parameters(), lr=0.0001, weight_decay=0.0005)
-trainer = Trainer(model, crit, optim, train_dl, val_dl, True, 50)  # set early stopping persistence
+trainer = Trainer(model, crit, optim, train_dl, val_dl, True, 100)  # set early stopping persistence
 
 # go, go, go... call fit on trainer
 # TODO
-res = trainer.fit(300)  # set epochs
+res = trainer.fit(600)  # set epochs
 
 # plot the results
 plt.plot(np.arange(len(res[0])), res[0], label='train loss')
