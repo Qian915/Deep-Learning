@@ -12,17 +12,21 @@ class RNN(BaseLayer):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.output_size = output_size
-        # hidden layer & output layer for RNN
+        # hidden layer & output layer
         self.fc_h = FullyConnected(self.input_size+self.hidden_size, self.hidden_size)
         self.fc_y = FullyConnected(self.hidden_size, self.output_size)
+        self.sigmoid = Sigmoid()
+        self.tanh = TanH()
 
-        # initialize hidden_state with all 0
+        # output of hidden layer & output layer
         self.hidden_state = []
         self.hidden_state.append(np.zeros(hidden_size))  # a vector!
+        self.output = []
 
         self._memorize = False
         self._gradient_weights = None
         self._optimizer = None
+
 
     @property
     def memorize(self):
@@ -58,23 +62,30 @@ class RNN(BaseLayer):
 
     def forward(self, input_tensor):
         self.t = input_tensor.shape[0]
-        output = []
+
         for t in range(input_tensor.shape[0]):
             if not self.memorize and t > 0:
                 self.hidden_state[t-1] = np.zeros(self.hidden_size)
-
+            # if memorize, last hidden state for t=0 of the second batch = last hidden state of the first batch
+            if self.memorize and t == 0:
+                self.hidden_state[0] = self.hidden_state[self.t-1]
+            print(t)
             # ht
             x_composed = np.hstack((input_tensor[t], self.hidden_state[t-1 if t > 0 else 0]))
+            x_composed = np.atleast_2d(x_composed)  # 2D
+            print(x_composed)
             if t == 0:
-                self.hidden_state[t] = TanH().forward(self.fc_h.forward(x_composed))
+                self.hidden_state[t] = self.tanh.forward(self.fc_h.forward(x_composed))  # 2D
             else:
-                self.hidden_state.append(TanH().forward(self.fc_h.forward(x_composed)))
-
+                self.hidden_state.append(self.tanh.forward(self.fc_h.forward(x_composed)))  # 2D
+            self.hidden_state[t] = self.hidden_state[t].reshape(self.hidden_state[t].shape[1])  # 1D
+            print(self.hidden_state[t])
             # yt
-            output.append(self.fc_y.forward(self.hidden_state[t]))
-            output[t] = Sigmoid().forward(output[t])
+            self.output.append(self.fc_y.forward(np.atleast_2d(self.hidden_state[t])))  # 2D
+            self.output[t] = self.output[t].reshape(self.output[t].shape[1])  # 1D
+            self.output[t] = self.sigmoid.forward(self.output[t])
 
-        result = np.array(output)
+        result = np.array(self.output)
         # store activations for sigmoid & tanh layer
         self.sigmoid_activations = result
         self.tanh_activations = np.array(self.hidden_state)
@@ -82,16 +93,14 @@ class RNN(BaseLayer):
         return result
 
     def backward(self, error_tensor):
-        sigmoid = Sigmoid()
-        tanh = TanH()
         gradient_wy = None
         gradient_wh = None
         gradient_ht = np.zeros((self.t, self.hidden_size))
         for t in range(error_tensor.shape[0]-1, -1, -1):
             # gradient w.r.t. W_y
             # set activations for sigmoid layer
-            sigmoid.activations = self.sigmoid_activations[t]
-            gradient_ot = sigmoid.backward(error_tensor[t])
+            self.sigmoid.activations = self.sigmoid_activations[t]
+            gradient_ot = self.sigmoid.backward(error_tensor[t])
 
             # gradient w.r.t. ht
             # t = 0 / T: only one part of sum
@@ -100,8 +109,8 @@ class RNN(BaseLayer):
 
             else:
                 # set activations for tanh layer
-                tanh.activations = self.tanh_activations[t+1]
-                gradient_ut = tanh.backward(gradient_ht[t+1])
+                self.tanh.activations = self.tanh_activations[t+1]
+                gradient_ut = self.tanh.backward(gradient_ht[t+1])
                 # decompose Wh: W_xh, W_hh
                 wh = self.fc_h.backward(gradient_ut)
                 if t == 0:
@@ -113,8 +122,8 @@ class RNN(BaseLayer):
             gradient_wy += self.fc_y.gradient_weights
 
             # gradient w.r.t W_h
-            tanh.activations = self.tanh_activations[t]
-            error = self.fc_h.backward(tanh.backward(gradient_ht[t]))
+            self.tanh.activations = self.tanh_activations[t]
+            error = self.fc_h.backward(self.tanh.backward(gradient_ht[t]))
             gradient_wh += self.fc_h.gradient_weights
 
             # decompose Wh: W_xh, W_hh
