@@ -65,9 +65,7 @@ class Circle:
         plt.axis('off')
         plt.show()
 
-# R - Red
-# G - Green
-# B - Blue
+
 class Spectrum:
     # Array for generated pattern
     output = np.ndarray
