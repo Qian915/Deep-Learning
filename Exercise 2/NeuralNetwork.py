@@ -9,10 +9,6 @@ class NeuralNetwork:
     # constructor
     def __init__(self, optimizer, weights_initializer, bias_initializer):
 
-        self.weights_initializer = weights_initializer
-        self.bias_initializer = bias_initializer
-        self.optimizer = optimizer
-
         # create public members
         self.loss = []
         self.layers = []
@@ -23,12 +19,14 @@ class NeuralNetwork:
         self.input = None
         self.label = None
         self.input_dim = 0
+        self.optimizer = optimizer
 
+        self.weights_initializer = weights_initializer
+        self.bias_initializer = bias_initializer
 
-    def forward(self, test=False):
-        if test == False:
-            # training data
-            self.input, self.label = self.data_layer.forward()
+    def forward(self):
+        # training data
+        self.input, self.label = self.data_layer.forward()
         input_tensor = self.input
 
         # traverse every layer
@@ -36,10 +34,9 @@ class NeuralNetwork:
             # output of the former layer = input of the next layer
             input_tensor = layer.forward(input_tensor)
 
-        if test == False:
-            input_tensor = self.loss_layer.forward(input_tensor, self.label)
+        out = self.loss_layer.forward(input_tensor, self.label)
 
-        return input_tensor
+        return out
 
     def backward(self):
         # backpropagation from Loss layer
@@ -52,29 +49,27 @@ class NeuralNetwork:
         return error
 
     def append_trainable_layer(self, layer):
-        # set initializer for the layer
-        layer.initilize(self.weights_initializer, self.bias_initializer)
+        optimizer = copy.deepcopy(self.optimizer)
 
         # set optimizer for the layer
-        optimizer = copy.deepcopy(self.optimizer)
         layer.optimizer = optimizer
+        layer.initialize(self.weights_initializer, self.bias_initializer)
 
         # append the layer to layers
         self.layers.append(layer)
 
     def train(self, iterations):
         for epoch in range(iterations):
-            y_pred = self.forward()
-            input = self.backward()
-
+            print("training  ", epoch, " of ", iterations)
             # store loss for each iteration
-            self.loss.append(self.loss_layer.forward(self.label, y_pred))
+            self.loss.append(self.forward())
+            self.backward()
 
     def test(self, input_tensor):
-        self.input = input_tensor
-        y_pred = self.forward(test=True)
+        for layer in self.layers:
+            input_tensor = layer.forward(input_tensor)
+        y_pred = input_tensor
         return y_pred
-
 
 
 

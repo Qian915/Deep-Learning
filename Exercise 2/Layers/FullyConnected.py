@@ -1,5 +1,4 @@
 import numpy as np
-from Layers import Initializers
 from Optimization import Optimizers
 
 
@@ -34,21 +33,16 @@ class FullyConnected:
     def gradient_weights(self):
         return self.grad_weights
 
-    # initializer for weights & bias
-    def initialize(self, weights_initializer, bias_initializer):
-        w = weights_initializer.initialize((self.weights.shape[0]-1, self.weights.shape[1]), self.input_size, self.output_size)
-        b = bias_initializer.initialize((1, self.weights.shape[1]), self.input_size, self.output_size)
-        # concatenate w and b => weights with bias
-        self.weights = np.vstack(w, b)
-        return self.weights
-
     def forward(self, input_tensor):
         input_tensor = np.array(input_tensor)    # input_tensor is of type tuple
         # input with bias
-        bias = np.ones((input_tensor.shape[0], 1))
-        self.input = np.hstack((input_tensor, bias))
+        if (np.shape(input_tensor)[1]) == (np.shape(self.weights)[0]):
+            self.input = input_tensor
+        if (np.shape(input_tensor)[1] +1) == (np.shape(self.weights)[0]):
+            bias = np.ones((input_tensor.shape[0], 1))
+            self.input = np.hstack((input_tensor, bias))
 
-        out = np.dot(self.input, self.weights)
+        out = np.dot(self.input, self.weights)     # (50,4) (5,3) ??????????????
         return out
 
     def backward(self, error_tensor):
@@ -66,5 +60,9 @@ class FullyConnected:
 
         return error
 
+    def initialize(self, weights_initializer, bias_initializer):
+        self.weights = weights_initializer.initialize( (self.input_size, self.output_size), self.input_size, self.output_size)
+        self.bias = bias_initializer.initialize( (1, self.output_size), self.input_size, self.output_size )
 
+        self.weights = np.vstack((self.weights, self.bias))
 

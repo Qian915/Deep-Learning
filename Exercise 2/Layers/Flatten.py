@@ -1,16 +1,23 @@
+
+import numpy as np
+
 class Flatten:
 
-    def __init__(self):
-        self.input = None
-        self.error = None
+    def __init__self(self):
+        self.input_shape = None
+        self.batch_size = None
 
     def forward(self, input_tensor):
-        self.input = input_tensor
-        # input for FC: (batch_size, input_size)
-        out = input_tensor.reshape(input_tensor.shape[0], -1)
-        return out
+        self.input_shape = np.shape(input_tensor)[1:]
+        self.batch_size = np.shape(input_tensor)[0]
+
+        flatten = input_tensor.reshape((self.batch_size, np.prod(self.input_shape)))
+        return flatten
 
     def backward(self, error_tensor):
-        # error_tensor: (batch_size, input_size)
-        out = error_tensor.reshape(self.input.shape)
-        return out
+        # treat batch size as tuple
+        shape = (self.batch_size,) + self.input_shape
+        tensor = error_tensor.reshape(shape)
+        return tensor
+
+
